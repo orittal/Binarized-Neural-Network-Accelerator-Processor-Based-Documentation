@@ -11,7 +11,7 @@ The project addresses the "Power & Memory Wall" in edge-device deep learning by 
 * **Low Hardware Overhead:** Significant throughput gains with only a **94% area increase** relative to the original DLX core.
 * **Accuracy vs. Efficiency Trade-off:** Implementing hardware binarization resulting in a minor **11%** accurace degration, whie drasticly reducing memory footprint and computational complexity. 
 
-### Tech Stack / Tools
+### Tools
 * **Hardware Description Language:** Verilog
 * **Simulation & Verification:** Xilinx Vivado / ModelSim
 * **Architecture:** DLX RISC Core
