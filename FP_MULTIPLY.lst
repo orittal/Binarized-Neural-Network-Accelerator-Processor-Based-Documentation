@@ -1,0 +1,77 @@
+					            	 
+0x00000000: 0x8C01002E	start:      	 lw R1 R0 val1
+0x00000001: 0x8C02002F	            	     lw R2 R0 val2
+0x00000002: 0x00223024	            	     xor R6 R1 R2
+0x00000003: 0x8C040028	            	     lw R4 R0 m_sign
+0x00000004: 0x00C43026	            	     and R6 R6 R4
+					            	 
+0x00000005: 0x8C040029	            	     lw R4 R0 m_exp
+0x00000006: 0x00243826	            	     and R7 R1 R4
+0x00000007: 0x00444026	            	     and R8 R2 R4
+0x00000008: 0x00E84823	            	     add R9 R7 R8
+0x00000009: 0x8C05002C	            	     lw R5 R0 bias_s
+0x0000000A: 0x01254822	            	     sub R9 R9 R5
+					            	 
+0x0000000B: 0x8C04002A	            	     lw R4 R0 m_mant
+0x0000000C: 0x00245826	            	     and R11 R1 R4
+0x0000000D: 0x00446026	            	     and R12 R2 R4
+0x0000000E: 0x8C05002B	            	     lw R5 R0 impl_1
+0x0000000F: 0x01655825	            	     or R11 R11 R5
+0x00000010: 0x01856025	            	     or R12 R12 R5
+					            	 
+0x00000011: 0x2C0D0000	            	     addi R13 R0 0
+0x00000012: 0x2C0E0018	            	     addi R14 R0 24
+0x00000013: 0x2C0A0001	            	     addi R10 R0 1
+					            	 
+0x00000014: 0x018A7826	l_mul:      	 and R15 R12 R10
+0x00000015: 0x11FF0001	            	     beqz R15 s_prod
+0x00000016: 0x01AB6823	            	     add R13 R13 R11
+					            	 
+0x00000017: 0x2DCEFFFF	s_prod:     	 addi R14 R14 -1
+0x00000018: 0x11DF0003	            	     beqz R14 m_norm
+0x00000019: 0x01BF6802	            	     srli R13 R13
+0x0000001A: 0x019F6002	            	     srli R12 R12
+0x0000001B: 0x15DFFFF8	            	     bnez R14 l_mul
+					            	 
+0x0000001C: 0x8C04002D	m_norm:     	 lw R4 R0 m_b24
+0x0000001D: 0x01A47826	            	     and R15 R13 R4
+0x0000001E: 0x11FF0003	            	     beqz R15 pack_r
+					            	 
+0x0000001F: 0x01BF6802	            	     srli R13 R13
+0x00000020: 0x8C04002B	            	     lw R4 R0 impl_1
+0x00000021: 0x01244823	            	     add R9 R9 R4
+					            	 
+0x00000022: 0x8C04002A	pack_r:     	 lw R4 R0 m_mant
+0x00000023: 0x01A46826	            	     and R13 R13 R4
+0x00000024: 0x01A91825	            	     or R3 R13 R9
+0x00000025: 0x00661825	            	     or R3 R3 R6
+0x00000026: 0xAC030030	            	     sw R3 R0 res_val
+					            	 
+0x00000027: 0xFFFF0000	            	     halt
+					            	 
+0x00000028: 0x80000000	m_sign:     	 dc 0x80000000
+0x00000029: 0x7F800000	m_exp:      	 dc 0x7F800000
+0x0000002A: 0x007FFFFF	m_mant:     	 dc 0x007FFFFF
+0x0000002B: 0x00800000	impl_1:     	 dc 0x00800000
+0x0000002C: 0x3F800000	bias_s:     	 dc 0x3F800000
+0x0000002D: 0x01000000	m_b24:      	 dc 0x01000000
+0x0000002E: 0x3FA8F5C3	val1:       	 dc 0x3fa8f5c3
+0x0000002F: 0x40000000	val2:       	 dc 0x40000000
+0x00000030: 0x00000000	res_val:    	 dc 0x0
+
+Label Report:
+start: 3 D: 
+l_mul: 27 D: 35
+s_prod: 31 D: 28
+m_norm: 37 D: 32
+pack_r: 45 D: 39
+m_sign: 53 D: 6
+m_exp: 54 D: 9
+m_mant: 55 D: 16, 45
+impl_1: 56 D: 19, 42
+bias_s: 57 D: 13
+m_b24: 58 D: 37
+val1: 59 D: 3
+val2: 60 D: 4
+res_val: 61 D: 49
+*XML file date: Wed 20/6/2012 6:49:12
