@@ -1,0 +1,2 @@
+vhdtdtfi -lib work E:/adlx/C8/SOURCE_VER/PC_ENVm.v -lang verilog -prj SOURCE_VER -o PC_ENVm.spl -module PC_ENVm -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
+spl2sym -intstyle ise -family spartan6 -w PC_ENVm.spl E:/adlx/C8/SOURCE_VER/PC_ENVm.sym 

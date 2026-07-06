@@ -1,0 +1,16 @@
+[Inputs]
+ack_n
+clk
+mr
+mw
+reset
+[Outputs]
+as_n
+busy
+wr_n
+stop_n
+=MAC_state[1:0]=
+[BiDir]
+[ATTRIBUTES]
+VeriModel MAC
+
