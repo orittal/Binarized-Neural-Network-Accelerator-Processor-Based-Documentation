@@ -1,0 +1,182 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import numpy as np
+from torch.utils.data import DataLoader, TensorDataset
+import pandas as pd
+
+np.random.seed(42)
+torch.manual_seed(42)
+
+#ground truth, same as DNN ground truth
+true_weights = np.array([
+    0.0186, 0.1190, 0.0521, 0.0361, 0.0067, 0.0067, 0.0024, 0.0795,
+    0.0363, 0.0487, 0.0008, 0.1385, 0.0706, 0.0094, 0.0079, 0.0080,
+    0.0143, 0.0294, 0.0224, 0.0136, 0.0374, 0.0059, 0.0137, 0.0180,
+    0.0241, 0.0608, 0.0088, 0.0285, 0.0355, 0.0019, 0.0370, 0.0074
+], dtype=np.float32)
+
+financial_threshold = 0.0  #threshold
+
+print("groud truth weights")
+for i, w in enumerate(true_weights):
+    print(f"אפיק השקעה {i+1:02d}: משקל {w:.4f}")
+print(f"סף רווחיות שנבחר: {financial_threshold} (חברה מרוויחה או מפסידה)\n" + "-"*50 + "\n")
+
+#trainng set
+num_samples = 25000
+
+raw_inputs = np.random.uniform(-100, 100, size=(num_samples, 32)).astype(np.float32)
+final_balances = np.dot(raw_inputs, true_weights)
+
+labels = (final_balances >= financial_threshold).astype(np.float32).reshape(-1, 1)
+
+normalized_inputs = raw_inputs / 100.0
+
+split_idx = int(num_samples * 0.8)
+X_train, X_test = normalized_inputs[:split_idx], normalized_inputs[split_idx:]
+y_train, y_test = labels[:split_idx], labels[split_idx:]
+
+train_dataset = TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
+test_dataset = TensorDataset(torch.tensor(X_test), torch.tensor(y_test))
+train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+
+#BNN execusion
+class SignSTE(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input):
+        ctx.save_for_backward(input)
+        return torch.where(input >= 0, 1.0, -1.0)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, = ctx.saved_tensors
+        grad_input = grad_output.clone()
+        # HardTanh [-1, 1] for STE
+        grad_input[input.abs() > 1.0] = 0
+        return grad_input
+
+class BinarizedLinear(nn.Module):
+    def __init__(self, in_features, out_features):
+        super(BinarizedLinear, self).__init__()
+        # laent weights
+        self.weight = nn.Parameter(torch.FloatTensor(out_features, in_features))
+        nn.init.uniform_(self.weight, -1.0, 1.0)
+
+    def forward(self, x):
+        # binary
+        w_bin = SignSTE.apply(self.weight)
+        return torch.matmul(x, w_bin.t())
+
+# network architecture
+class FinancialBNN(nn.Module):
+    def __init__(self):
+        super(FinancialBNN, self).__init__()
+        # 32 FP32 inputs, 32 binary activation
+        self.hidden = BinarizedLinear(32, 32)
+        # 32 binary inputs, 1 binary output
+        self.output = BinarizedLinear(32, 1)
+        # loss
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.hidden(x)
+        x = SignSTE.apply(x)
+        x = self.output(x)
+        x = self.sigmoid(x)
+        return x
+
+model = FinancialBNN().to(torch.float32)
+criterion = nn.BCELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+#training loop
+epochs = 500
+print("start training")
+for epoch in range(epochs):
+    model.train()
+    epoch_loss = 0
+    for batch_X, batch_y in train_loader:
+        optimizer.zero_grad()
+        predictions = model(batch_X)
+        loss = criterion(predictions, batch_y)
+        loss.backward()
+        optimizer.step()
+
+        # clamping [-1,1]
+        with torch.no_grad():
+            model.hidden.weight.clamp_(-1.0, 1.0)
+            model.output.weight.clamp_(-1.0, 1.0)
+
+        epoch_loss += loss.item()
+
+    if (epoch + 1) % 15 == 0 or epoch == 0:
+        print(f"Epoch {epoch+1:03d}/{epochs} | Loss: {epoch_loss/len(train_loader):.4f}")
+
+#evaluation
+model.eval()
+with torch.no_grad():
+    X_test_tensor = torch.tensor(X_test)
+    y_test_tensor = torch.tensor(y_test)
+    test_preds = model(X_test_tensor)
+
+    predicted_classes = (test_preds >= 0.5).float()
+    accuracy = (predicted_classes == y_test_tensor).float().mean()
+    print(f"\n" + "="*50 + f"\n accuracy {accuracy.item()*100:.2f}%\n" + "="*50)
+
+# hardware evaluation
+model.eval()
+with torch.no_grad():
+    X_test_tensor = torch.tensor(X_test)
+    y_test_tensor = torch.tensor(y_test)
+
+    hidden_weights_real = model.hidden.weight.data.numpy()
+    output_weights_real = model.output.weight.data.numpy()
+
+    w_hidden_bin = np.where(hidden_weights_real >= 0, 1.0, -1.0)
+    w_output_bin = np.where(output_weights_real >= 0, 1.0, -1.0)
+
+    h_out = torch.matmul(X_test_tensor, torch.tensor(w_hidden_bin).float().T)
+
+    h_act = torch.where(h_out >= 0, 1.0, -1.0)
+
+    raw_outputs = torch.matmul(h_act, torch.tensor(w_output_bin).float().T)
+
+    predicted_classes_hw = (raw_outputs >= 0.0).float()
+
+    accuracy_hw = (predicted_classes_hw == y_test_tensor).float().mean()
+    print(f"\n" + "="*50 + f"\n BNN Hardware-Equivalent Accuracy: {accuracy_hw.item()*100:.2f}%\n" + "="*50)
+
+# final weights
+print("\n--- binary weights")
+
+hidden_weights_real = model.hidden.weight.data.numpy()
+hidden_bits = (hidden_weights_real >= 0).astype(int)
+print(f"\n binary hidden weights matrix{hidden_bits.shape}):")
+print(hidden_bits)
+
+output_weights_real = model.output.weight.data.numpy()
+output_bits = (output_weights_real >= 0).astype(int).flatten()
+print(f"\n" + "-"*40)
+print(f"binary output weights {len(output_bits)}):")
+print(output_bits)
+
+# save weights to excel
+print("\n" + "="*50 + "\n save weights to excel ")
+
+# קובץ 1: המשקולות הרציפות (הערכים החתוכים בין 1- ל-1 כפי שנלמדו)
+df_hidden_real = pd.DataFrame(hidden_weights_real)
+df_output_real = pd.DataFrame(output_weights_real)
+
+excel_real_filename = 'bnn_real_weights.xlsx'
+with pd.ExcelWriter(excel_real_filename, engine='openpyxl') as writer:
+    df_hidden_real.to_excel(writer, sheet_name='Hidden_Real_32x32', index=False, header=False)
+    df_output_real.to_excel(writer, sheet_name='Output_Real_1x32', index=False, header=False)
+
+df_hidden_bits = pd.DataFrame(hidden_bits)
+df_output_bits = pd.DataFrame(output_bits).T
+
+excel_bits_filename = 'bnn_hardware_bits.xlsx'
+with pd.ExcelWriter(excel_bits_filename, engine='openpyxl') as writer:
+    df_hidden_bits.to_excel(writer, sheet_name='Hidden_Bits_32x32', index=False, header=False)
+    df_output_bits.to_excel(writer, sheet_name='Output_Bits_1x32', index=False, header=False)
