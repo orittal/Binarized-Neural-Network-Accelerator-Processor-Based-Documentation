@@ -1,0 +1,4 @@
+vhdtdtfi -lib work C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/FP_Adder.v -lang verilog -prj SOURCE_VER -o FP_Adder.spl -module FP_Adder -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
+spl2sym -intstyle ise -family spartan6 -w FP_Adder.spl C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/FP_Adder.sym 
+vhdtdtfi -lib work C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/FP_Adder.v -lang verilog -prj SOURCE_VER -o FP_Adder.spl -module FP_Adder -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
+spl2sym -intstyle ise -family spartan6 -w FP_Adder.spl C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/FP_Adder.sym 
