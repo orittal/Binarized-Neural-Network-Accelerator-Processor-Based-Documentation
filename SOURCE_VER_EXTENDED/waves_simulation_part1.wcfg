@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb_isim_beh.wdb" id="1" type="auto">
+         <top_modules>
+            <top_module name="FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb" />
+            <top_module name="glbl" />
+            <top_module name="numeric_std" />
+            <top_module name="std_logic_1164" />
+            <top_module name="vcomponents" />
+            <top_module name="vl_types" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <WVObjectSize size="10" />
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/CLK_IN" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">CLK_IN</obj_property>
+      <obj_property name="ObjectShortName">CLK_IN</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/RST_IN" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">RST_IN</obj_property>
+      <obj_property name="ObjectShortName">RST_IN</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/STEP_IN" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">STEP_IN</obj_property>
+      <obj_property name="ObjectShortName">STEP_IN</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/UUT/XLXI_1/ir" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">ir[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ir[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/UUT/XLXI_1/dlx_state" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">dlx_state[4:0]</obj_property>
+      <obj_property name="ObjectShortName">dlx_state[4:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/UUT/XLXI_1/func" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">func[5:0]</obj_property>
+      <obj_property name="ObjectShortName">func[5:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/UUT/XLXI_1/ack_n" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">ack_n</obj_property>
+      <obj_property name="ObjectShortName">ack_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/UUT/XLXI_1/mac_state" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">mac_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">mac_state[1:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/UUT/XLXI_1/bnn_sel" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">bnn_sel[1:0]</obj_property>
+      <obj_property name="ObjectShortName">bnn_sel[1:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FULL_Extended_IOSIMUL_FULL_Extended_IOSIMUL_sch_tb/UUT/XLXI_1/XLXI_1/ACC_UPDATE" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">ACC_UPDATE</obj_property>
+      <obj_property name="ObjectShortName">ACC_UPDATE</obj_property>
+   </wvobject>
+</wave_config>
