@@ -1,0 +1,1324 @@
+pc = 0x0
+
+main: addi R28 R0 fpmul
+    addi R29 R0 fpadd
+    addi R21 R0 0x300
+    addi R25 R0 0x800
+    addi R22 R0 32
+
+h_lp: addi R23 R0 0
+    addi R20 R0 0x200
+    addi R24 R0 32
+
+in_lp: lw R1 R20 0
+    lw R2 R21 0
+    jalr R28
+    add R1 R23 R0
+    add R2 R3 R0
+    jalr R29
+    add R23 R3 R0
+    addi R20 R20 1
+    addi R21 R21 1
+    addi R24 R24 -1
+    bnez R24 in_lp
+    lw R4 R0 m_sign
+    and R5 R23 R4
+    beqz R5 h_pos
+    addi R23 R0 0
+
+h_pos: sw R23 R25 0
+    addi R25 R25 1
+    addi R22 R22 -1
+    bnez R22 h_lp
+    addi R23 R0 0
+    addi R25 R0 0x800
+    addi R26 R0 0x850
+    addi R24 R0 32
+
+f_lp: lw R1 R25 0
+    lw R2 R26 0
+    jalr R28
+    add R1 R23 R0
+    add R2 R3 R0
+    jalr R29
+    add R23 R3 R0
+    addi R25 R25 1
+    addi R26 R26 1
+    addi R24 R24 -1
+    bnez R24 f_lp
+    lw R4 R0 m_sign
+    and R5 R23 R4
+    addi R27 R0 1
+    beqz R5 s_fin
+    addi R27 R0 0
+
+s_fin: sw R27 R0 out_val
+    halt
+
+* ========================================================
+* פונקציית כפל נקודה צפה (FP32 Multiplication)
+* ========================================================
+fpmul: xor R6 R1 R2
+    lw R4 R0 m_sign
+    and R6 R6 R4
+    lw R4 R0 m_exp
+    and R7 R1 R4
+    and R8 R2 R4
+    add R9 R7 R8
+    lw R5 R0 bias_s
+    sub R9 R9 R5
+    lw R4 R0 m_mant
+    and R11 R1 R4
+    and R12 R2 R4
+    lw R5 R0 impl_1
+    or R11 R11 R5
+    or R12 R12 R5
+    addi R13 R0 0
+    addi R14 R0 24
+    addi R10 R0 1
+
+l_mul: and R15 R12 R10
+    beqz R15 s_prod
+    add R13 R13 R11
+
+s_prod: addi R14 R14 -1
+    beqz R14 m_norm
+    srli R13 R13
+    srli R12 R12
+    bnez R14 l_mul
+
+m_norm: lw R4 R0 m_b24
+    and R15 R13 R4
+    beqz R15 pack_r
+    srli R13 R13
+    lw R4 R0 impl_1
+    add R9 R9 R4
+
+pack_r: lw R4 R0 m_mant
+    and R13 R13 R4
+    or R3 R13 R9
+    or R3 R3 R6
+    jr R31
+
+* ========================================================
+* פונקציית חיבור נקודה צפה (FP32 Addition)
+* ========================================================
+fpadd: beqz R1 r2_rt
+    beqz R2 r1_rt
+    lw R4 R0 m_mant
+    lw R5 R0 m_exp
+    or R4 R4 R5
+    and R7 R1 R4
+    and R8 R2 R4
+    sub R9 R7 R8
+    lw R4 R0 m_sign
+    and R5 R9 R4
+    beqz R5 no_swp
+    add R4 R1 R0
+    add R1 R2 R0
+    add R2 R4 R0
+
+no_swp: lw R4 R0 m_exp
+    and R7 R1 R4
+    and R8 R2 R4
+    lw R4 R0 m_sign
+    and R5 R1 R4
+    and R6 R2 R4
+    lw R4 R0 m_mant
+    and R11 R1 R4
+    and R12 R2 R4
+    lw R4 R0 impl_1
+    or R11 R11 R4
+    or R12 R12 R4
+    sub R9 R7 R8
+
+al_lp: beqz R9 al_dn
+    srli R12 R12
+    lw R4 R0 impl_1
+    sub R9 R9 R4
+    beqz R0 al_lp
+
+al_dn: xor R4 R5 R6
+    lw R10 R0 m_sign
+    and R4 R4 R10
+    bnez R4 sb_mnt
+    add R13 R11 R12
+    add R3 R5 R0
+    add R9 R7 R0
+    lw R4 R0 m_b24
+    and R15 R13 R4
+    beqz R15 pk_ad
+    srli R13 R13
+    lw R4 R0 impl_1
+    add R9 R9 R4
+    beqz R0 pk_ad
+
+sb_mnt: sub R13 R11 R12
+    add R3 R5 R0
+    add R9 R7 R0
+    beqz R13 rt_zr
+
+nm_sb: lw R4 R0 impl_1
+    and R15 R13 R4
+    bnez R15 pk_ad
+    slli R13 R13
+    lw R4 R0 impl_1
+    sub R9 R9 R4
+    bnez R9 nm_sb
+
+pk_ad: lw R4 R0 m_mant
+    and R13 R13 R4
+    or R3 R3 R9
+    or R3 R3 R13
+    jr R31
+
+r2_rt: add R3 R2 R0
+    jr R31
+
+r1_rt: add R3 R1 R0
+    jr R31
+
+rt_zr: addi R3 R0 0
+    jr R31
+
+pc = 0x100
+
+m_sign: dc 0x80000000
+m_exp:  dc 0x7F800000
+m_mant: dc 0x007FFFFF
+impl_1: dc 0x00800000
+bias_s: dc 0x3F800000
+m_b24:  dc 0x01000000
+
+* ========================================================
+pc = 0x200                  * --- וקטור הקלט המעודכן: 32 אינפוטים מנורמלים ---
+dc 0x3EC92F38
+dc 0xBEDAFE4A
+dc 0xBF0BDA21
+dc 0x3DD22F6F
+dc 0x3EE0BC7A
+dc 0xBECE1EBB
+dc 0xBF7CD2E1
+dc 0x3F301463
+dc 0xBF009A8F
+dc 0x3EC3DBDF
+dc 0x3EE3C0DF
+dc 0x3F3A4BC8
+dc 0xBF53F57D
+dc 0xBF1AA6B7
+dc 0xbe05bcee
+dc 0x3F3CA3E0
+dc 0xBE285BD3
+dc 0x3ECE1A42
+dc 0xBF416B99
+dc 0x3ED5EFBB
+dc 0xBD928802
+dc 0xBF4F0CD2
+dc 0x3F3A4B8F
+dc 0xBECE39A5
+dc 0xBE08EAD3
+dc 0xBF49FAEC
+dc 0xBD965D10
+dc 0x3F4CD6C9
+dc 0x3EAEFE16
+dc 0x3EEAAFCE
+dc 0x3EE5BC48
+dc 0xBF1EBC4A
+* ==========================================================
+pc = 0x300                  * --- משקולות השכבה הראשונה: 32 נוירונים * 32 משקולות ---
+* --- Neuron 1 Weights ---
+dc 0x3F02A6D8
+dc 0x3FAE57E5
+dc 0x3EB3D827
+dc 0x3F58EF6A
+dc 0xBD313F19
+dc 0xBCFDCFF7
+dc 0x3DC2E693
+dc 0x3F429CE6
+dc 0x3EB6A238
+dc 0x3E04E374
+dc 0x3E9970A3
+dc 0x3FD0E363
+dc 0x3F1B5F2A
+dc 0xBE285BD0
+dc 0x3E6CDFE7
+dc 0xBE8EE043
+dc 0xBE88AC03
+dc 0xBEB7A2BE
+dc 0xBE40A5D8
+dc 0x3E4EAFFA
+dc 0x3EE09D94
+dc 0x3EEF9790
+dc 0x3EAA4E65
+dc 0xBD7AE7E5
+dc 0x3EB16BBF
+dc 0xBEA5EF12
+dc 0x3EA6229F
+dc 0x3EE04DCB
+dc 0xBEAA647D
+dc 0xBDD54AC3
+dc 0x3F05256D
+dc 0x3EE6C6FB
+* --- Neuron 2 Weights ---
+dc 0xBE08C9EC
+dc 0xBE3C715A
+dc 0x3DFDE44E
+dc 0xBE1DC40A
+dc 0x3F5B0CD8
+dc 0x3F57B6CD
+dc 0xBE1AF1D9
+dc 0xBDFF057B
+dc 0xBE1424E6
+dc 0xBE747CE1
+dc 0xBE37078C
+dc 0xBDFF586E
+dc 0xBE27CB36
+dc 0x3F4AD26C
+dc 0xBDFA0B33
+dc 0x3F34F5DF
+dc 0x3F3A0CD4
+dc 0x3F0BB6C9
+dc 0x3F5DAFC9
+dc 0xBDC462D6
+dc 0xBE3C3F8A
+dc 0xBE1DF07C
+dc 0xBE3981DA
+dc 0x3F2AA863
+dc 0xBE4EFE6B
+dc 0x3F2BA1D1
+dc 0xBE4B64EC
+dc 0xBE1E0D1B
+dc 0x3F3F72B5
+dc 0x3F4D2BA2
+dc 0xBDFA2E3E
+dc 0xBE1A5F58
+* --- Neuron 3 Weights ---
+dc 0x3F062E52
+dc 0x3F9A10CE
+dc 0x3EA3B331
+dc 0x3F5BE1D6
+dc 0xBD184CB2
+dc 0xBCACDA44
+dc 0x3E1C5AE0
+dc 0x3F4E5BD4
+dc 0x3EA9B26D
+dc 0x3E170DC4
+dc 0x3EA116EE
+dc 0x3FCE136F
+dc 0x3F285F5D
+dc 0xBE1EBDA0
+dc 0x3E4E08B3
+dc 0xBE8BBED0
+dc 0xBE8D7E30
+dc 0xBEA5239E
+dc 0xBE47EA30
+dc 0x3E3887AC
+dc 0x3EE0AD2A
+dc 0x3EEAADCE
+dc 0x3EA577F4
+dc 0xBD928801
+dc 0x3EB1BD5E
+dc 0xBEAF24E9
+dc 0x3EA57BE4
+dc 0x3EDB3372
+dc 0xBEAB9EDE
+dc 0xBDCE1802
+dc 0x3F08639F
+dc 0x3EEC5F3C
+* --- Neuron 4 Weights ---
+dc 0xBE08A9E4
+dc 0xBE3E4DC5
+dc 0x3E1AD3FA
+dc 0xBE1F04AC
+dc 0x3F5A0CD2
+dc 0x3F54F96E
+dc 0xBE1DA3C7
+dc 0xBE0C53C7
+dc 0xBE181ED3
+dc 0xBE74D83B
+dc 0xBE3DF07D
+dc 0xBE0221E5
+dc 0xBE28BD27
+dc 0x3F4E0867
+dc 0xBDFFE3DA
+dc 0x3F387DAF
+dc 0x3F3F5AD4
+dc 0x3F0CBCE4
+dc 0x3F5FAA7C
+dc 0xBDCA1AD2
+dc 0xBE3CEF6B
+dc 0xBE1E0C4F
+dc 0xBE3B90B9
+dc 0x3F2B6CAD
+dc 0xBE4CD8EA
+dc 0x3F2E08BD
+dc 0xBE4E08C6
+dc 0xBE1F17E3
+dc 0x3F3EE4FA
+dc 0x3F50DF7D
+dc 0xBDFA0695
+dc 0xBE1C2A54
+* --- Neuron 5 Weights ---
+dc 0x3EEC5D73
+dc 0x3F88EF2D
+dc 0x3E9D0A3E
+dc 0x3F4AE3DB
+dc 0xBD3EE4D8
+dc 0xBCFFD4E9
+dc 0x3DC0BCE6
+dc 0x3F34B3D4
+dc 0x3EA3B38A
+dc 0x3DEF7AE4
+dc 0x3E8E5BD5
+dc 0x3FBC12F7
+dc 0x3F08EADC
+dc 0xBE3B0DCF
+dc 0x3E716AC7
+dc 0xBE8EE5C0
+dc 0xBE847DCB
+dc 0xBECE4DCB
+dc 0xBE339CDA
+dc 0x3E54A3DA
+dc 0x3EDE45D2
+dc 0x3EE6C5BC
+dc 0x3EA6BD32
+dc 0xBD63C7EE
+dc 0x3EAEFE24
+dc 0xBE9ADCE7
+dc 0x3EA7A2B6
+dc 0x3EDE1A4B
+dc 0xBEA5EFB9
+dc 0xBDDECFF4
+dc 0x3EFFEBCE
+dc 0x3EE09D43
+* --- Neuron 6 Weights ---
+dc 0x3EEAADCE
+dc 0x3F8AA4D2
+dc 0x3EAA5BCE
+dc 0x3F4CD6C4
+dc 0xBD40A9A3
+dc 0xBD0BAE52
+dc 0x3DDAA4B5
+dc 0x3F3D87D8
+dc 0x3EA9F8AA
+dc 0x3DEC26AC
+dc 0x3E8CE4DB
+dc 0x3FBD2BD0
+dc 0x3F10CDAA
+dc 0xBE370CE0
+dc 0x3E6FBBDB
+dc 0xBE90CDA8
+dc 0xBE80CD35
+dc 0xBEC4CE37
+dc 0xBE326CAC
+dc 0x3E526D3F
+dc 0x3EDCE457
+dc 0x3EE8CDA5
+dc 0x3EAAF5B2
+dc 0xBD5BBDBF
+dc 0x3EACCE3A
+dc 0xBEA3BD4F
+dc 0x3EA5BBDE
+dc 0x3EDFAEDF
+dc 0xBEA67CD0
+dc 0xBDDCE266
+dc 0x3F026CDC
+dc 0x3EE0C2BE
+* --- Neuron 7 Weights ---
+dc 0xBE0FB9E6
+dc 0xBE4071BD
+dc 0x3DFBBDA5
+dc 0xBE1FC3C0
+dc 0x3F57B6CD
+dc 0x3F54AD54
+dc 0xBE1CDAA3
+dc 0xBDFAF87F
+dc 0xBE14227E
+dc 0xBE763D40
+dc 0xBE3CFE3A
+dc 0xBDFAF0DF
+dc 0xBE28CD3E
+dc 0x3F4CD6CE
+dc 0xBDFA047F
+dc 0x3F38A7E0
+dc 0x3F3FAA3A
+dc 0x3F0FBAA5
+dc 0x3F5BEE35
+dc 0xBDC61BDB
+dc 0xBE3F047E
+dc 0xBE1E0C4F
+dc 0xBE3A0CD4
+dc 0x3F2B1ACC
+dc 0xBE4E08B4
+dc 0x3F2C23AE
+dc 0xBE4D7A52
+dc 0xBE1DF04F
+dc 0x3F3F5AEE
+dc 0x3F4CD7EF
+dc 0xBDF82BAE
+dc 0xBE19AC5A
+* --- Neuron 8 Weights ---
+dc 0x3EFF13EA
+dc 0x3F9DAFB3
+dc 0x3EAA5BCE
+dc 0x3F5FEE3C
+dc 0xBD186CDC
+dc 0xBCBA4DA5
+dc 0x3E28BCE3
+dc 0x3F4FFAED
+dc 0x3EAA4EE5
+dc 0x3E1FAED5
+dc 0x3EA7CD7E
+dc 0x3FCFAEF0
+dc 0x3F2BA5D8
+dc 0xBE1EEA7B
+dc 0x3E52BC32
+dc 0xBE8C21AA
+dc 0xBE8BA4DC
+dc 0xBEA4CD6F
+dc 0xBE49FAED
+dc 0x3E3C7A2E
+dc 0x3EE1ACE6
+dc 0x3EEBA7EF
+dc 0x3EA716A8
+dc 0xBD99ACF9
+dc 0x3EB2BBDF
+dc 0xBEAEBB3A
+dc 0x3EA7A2B6
+dc 0x3EE1BDB6
+dc 0xBEABA3A4
+dc 0xBDCF2BA2
+dc 0x3F08EADC
+dc 0x3EEDFBC2
+* --- Neuron 9 Weights ---
+dc 0xBE0F3A22
+dc 0xBE40CE53
+dc 0x3DEC26AC
+dc 0xBE1FE3C4
+dc 0x3F5A4D1A
+dc 0x3F54A3DA
+dc 0xBE1D5BD2
+dc 0xBDFAEE60
+dc 0xBE126CDC
+dc 0xBE756BDE
+dc 0xBE3BE3D9
+dc 0xBDFAF8B3
+dc 0xBE285BD0
+dc 0x3F4CE2AA
+dc 0xBDFA4F0C
+dc 0x3F37BD5B
+dc 0x3F3CD3FF
+dc 0x3F0FAF0D
+dc 0x3F5DCE2D
+dc 0xBDC6CD3E
+dc 0xBE3EA47B
+dc 0xBE1E5BC4
+dc 0xBE3AA4DA
+dc 0x3F2B67AE
+dc 0xBE4E0CF0
+dc 0x3F2BA1CD
+dc 0xBE4CD18F
+dc 0xBE1E08BD
+dc 0x3F3F5AD4
+dc 0x3F4E0916
+dc 0xBDFA5A62
+dc 0xBE1A1CD6
+* --- Neuron 10 Weights ---
+dc 0xBE0EE7CE
+dc 0xBE3F87AF
+dc 0x3E13EC4F
+dc 0xBE1FAEEA
+dc 0x3F59ACFA
+dc 0x3F56E7E4
+dc 0xBE1DE456
+dc 0xBE05BBCC
+dc 0xBE15FBB8
+dc 0xBE74FAEF
+dc 0xBE3DF054
+dc 0xBE01CE24
+dc 0xBE28CD35
+dc 0x3F4D2BC8
+dc 0xBDFFE3E0
+dc 0x3F3A0CD4
+dc 0x3F3EEB93
+dc 0x3F0CE354
+dc 0x3F5FAA5D
+dc 0xBDCE3958
+dc 0xBE3CDDFA
+dc 0xBE1E04B2
+dc 0xBE3C4E3D
+dc 0x3F2B5BDE
+dc 0xBE4CD4F4
+dc 0x3F2D6F59
+dc 0xBE4EE6CB
+dc 0xBE1F0860
+dc 0x3F3EF4DA
+dc 0x3F4FE47B
+dc 0xBDFAA7E3
+dc 0xBE1C6CE6
+* --- Neuron 11 Weights ---
+dc 0xBE0E7CBE
+dc 0xBE3FCEAA
+dc 0x3E18CE5F
+dc 0xBE1FAAEE
+dc 0x3F597CD3
+dc 0x3F563D2E
+dc 0xBE1DCE4B
+dc 0xBE086BDB
+dc 0xBE169BDB
+dc 0xBE752BEA
+dc 0xBE3DCE3E
+dc 0xBE01E3BA
+dc 0xBE28CD46
+dc 0x3F4CDAAA
+dc 0xBDFFE3E0
+dc 0x3F39BDB8
+dc 0x3F3EDE35
+dc 0x3F0CCE3E
+dc 0x3F5F6BD0
+dc 0xBDCFAEDC
+dc 0xBE3D5B99
+dc 0xBE1E08C8
+dc 0xBE3CE3AF
+dc 0x3F2B6CD0
+dc 0xBE4CDCA3
+dc 0x3F2D4DAA
+dc 0xBE4EAAF0
+dc 0xBE1EFAEF
+dc 0x3F3EEEB8
+dc 0x3F4FC9B4
+dc 0xBDFAA6BD
+dc 0xBE1C2BC4
+* --- Neuron 12 Weights ---
+dc 0x3EE8CDA5
+dc 0x3F8A4BDE
+dc 0x3EA6BC34
+dc 0x3F4CCDF6
+dc 0xBD44BD35
+dc 0xBD0EE9BD
+dc 0x3DDAA224
+dc 0x3F3D87D8
+dc 0x3EA9F99A
+dc 0x3DEC5B99
+dc 0x3E8CE45F
+dc 0x3FBD12E9
+dc 0x3F10CCEE
+dc 0xBE370C98
+dc 0x3E71AA57
+dc 0xBE90CD4A
+dc 0xBE80C7EE
+dc 0xBEC4CD7E
+dc 0xBE326CE2
+dc 0x3E523A39
+dc 0x3EDCE496
+dc 0x3EE8CD4E
+dc 0x3EAAFAA5
+dc 0xBD5BBCE8
+dc 0x3EACC9A5
+dc 0xBEA3B66D
+dc 0x3EA5BBDE
+dc 0x3EDFAEF5
+dc 0xBEA67CD0
+dc 0xBDDCDFA5
+dc 0x3F027C34
+dc 0x3EE0BF95
+* --- Neuron 13 Weights ---
+dc 0xBE0CE373
+dc 0xBE3DCEAA
+dc 0x3DFBCDEE
+dc 0xBE1FA3D8
+dc 0x3F5A2BD0
+dc 0x3F55BDFA
+dc 0xBE1D5BD2
+dc 0xBDFAE396
+dc 0xBE13EE0E
+dc 0xBE756BC3
+dc 0xBE3C7CB6
+dc 0xBDFAF57E
+dc 0xBE285BD0
+dc 0x3F4CDB97
+dc 0xBDFA0DA5
+dc 0x3F37CE35
+dc 0x3F3D6FA3
+dc 0x3F0FA4DD
+dc 0x3F5DE3A5
+dc 0xBDC6A6BE
+dc 0xBE3EEA85
+dc 0xBE1E5BD4
+dc 0xBE3A6BD1
+dc 0x3F2B66DC
+dc 0xBE4E0AA5
+dc 0x3F2BA4DD
+dc 0xBE4CDB9E
+dc 0xBE1E0C63
+dc 0x3F3F4D2C
+dc 0x3F4E0CE2
+dc 0xBDFA26C7
+dc 0xBE1A3C2A
+* --- Neuron 14 Weights ---
+dc 0xBE0F04A9
+dc 0xBE3FEA74
+dc 0x3E170C9E
+dc 0xBE1FAEE8
+dc 0x3F59ACFE
+dc 0x3F567A32
+dc 0xBE1DE1AA
+dc 0xBE06BC7A
+dc 0xBE163A48
+dc 0xBE752B33
+dc 0xBE3DEC29
+dc 0xBE01DA65
+dc 0xBE28CD3E
+dc 0x3F4CD6C4
+dc 0xBDFFE3DF
+dc 0x3F3A0CD4
+dc 0x3F3EE5BB
+dc 0x3F0CE307
+dc 0x3F5FAA66
+dc 0xBDCE1AAF
+dc 0xBE3CD4E8
+dc 0xBE1E04E5
+dc 0xBE3C5BC3
+dc 0x3F2B69BD
+dc 0xBE4CD4AA
+dc 0x3F2D4E3A
+dc 0xBE4EE5BC
+dc 0xBE1F0CF0
+dc 0x3F3EEFB5
+dc 0x3F4FE3DF
+dc 0xBDFAA21F
+dc 0xBE1C4EEA
+* --- Neuron 15 Weights ---
+dc 0x3EE3BCBE
+dc 0x3F88EF23
+dc 0x3E9FAEF5
+dc 0x3F49A1F6
+dc 0xBD3EE4D8
+dc 0xBCFFCE2A
+dc 0x3DC0CE6F
+dc 0x3F34B224
+dc 0x3EA3B2BD
+dc 0x3DEF7ABF
+dc 0x3E8E5BD5
+dc 0x3FBC12F1
+dc 0x3F08EA9E
+dc 0xBE3B0DC6
+dc 0x3E7169BD
+dc 0xBE8EE5C0
+dc 0xBE847DCB
+dc 0xBECE4DBF
+dc 0xBE339CD3
+dc 0x3E54A21A
+dc 0x3EDE45D2
+dc 0x3EE6C5BC
+dc 0x3EA6BC27
+dc 0xBD63C7DF
+dc 0x3EAEFE24
+dc 0xBE9ADCDE
+dc 0x3EA7A2B6
+dc 0x3EDE1A4A
+dc 0xBEA5EFB9
+dc 0xBDDECFF4
+dc 0x3EFFEBC9
+dc 0x3EE09CD0
+* --- Neuron 16 Weights ---
+dc 0x3EEAA2BA
+dc 0x3F8AA49B
+dc 0x3EAA5B8E
+dc 0x3F4CD67E
+dc 0xBD40A9A3
+dc 0xBD0BAE06
+dc 0x3DDAA450
+dc 0x3F3D87B3
+dc 0x3EA9F87F
+dc 0x3DEC2664
+dc 0x3E8CE49E
+dc 0x3FBD2B9A
+dc 0x3F10CD96
+dc 0xBE370CE0
+dc 0x3E6FBBC1
+dc 0xBE90CDA1
+dc 0xBE80CD35
+dc 0xBEC4CE11
+dc 0xBE326C98
+dc 0x3E526D3F
+dc 0x3EDCE457
+dc 0x3EE8CD87
+dc 0x3EAAF5B2
+dc 0xBD5BBDAF
+dc 0x3EACCE3A
+dc 0xBEA3BD4A
+dc 0x3EA5BBD0
+dc 0x3EDFAECB
+dc 0xBEA67CCD
+dc 0xBDDCE24C
+dc 0x3F026CDC
+dc 0x3EE0C2A1
+* --- Neuron 17 Weights ---
+dc 0xBE0D9E74
+dc 0xBE3E8CD3
+dc 0x3DFEBBDF
+dc 0xBE1FAEEA
+dc 0x3F5A5A90
+dc 0x3F565BB3
+dc 0xBE1D9ACE
+dc 0xBDFAFFDE
+dc 0xBE14FBA5
+dc 0xBE75DAA5
+dc 0xBE3CE5BB
+dc 0xBDFAF396
+dc 0xBE285BD0
+dc 0x3F4CDDA9
+dc 0xBDFA0D35
+dc 0x3F39BDBF
+dc 0x3F3DAAFE
+dc 0x3F0FAFA5
+dc 0x3F5E7CD5
+dc 0xBDC7AA5C
+dc 0xBE3EE3D8
+dc 0xBE1E5BCE
+dc 0xBE3CE452
+dc 0x3F2B6CD0
+dc 0xBE4E0C95
+dc 0x3F2C5BD3
+dc 0xBE4D7AA4
+dc 0xBE1DF052
+dc 0x3F3F5AFE
+dc 0x3F4D6F9E
+dc 0xBDF82BD0
+dc 0xBE1A5BE5
+* --- Neuron 18 Weights ---
+dc 0xBE08CE41
+dc 0xBE3C6FA5
+dc 0x3DFDE44E
+dc 0xBE1DC40A
+dc 0x3F5B0CDC
+dc 0x3F57B6C5
+dc 0xBE1AF1D9
+dc 0xBDFF057B
+dc 0xBE1424E6
+dc 0xBE747CDF
+dc 0xBE37078C
+dc 0xBDFF586E
+dc 0xBE27CB36
+dc 0x3F4AD266
+dc 0xBDFA0B33
+dc 0x3F34F5DC
+dc 0x3F3A0CD4
+dc 0x3F0BB6C9
+dc 0x3F5DAFC4
+dc 0xBDC462D6
+dc 0xBE3C3F85
+dc 0xBE1DF07C
+dc 0xBE3981DA
+dc 0x3F2AA863
+dc 0xBE4EFE6B
+dc 0x3F2BA1CD
+dc 0xBE4B64EC
+dc 0xBE1E0D1B
+dc 0x3F3F72B3
+dc 0x3F4D2B9F
+dc 0xBDFA2E3E
+dc 0xBE1A5F58
+* --- Neuron 19 Weights ---
+dc 0xBE0E7C35
+dc 0xBE3FCD81
+dc 0x3E18CE5F
+dc 0xBE1FAAEE
+dc 0x3F597CD3
+dc 0x3F563CE6
+dc 0xBE1DCE4B
+dc 0xBE086BDB
+dc 0xBE169BDB
+dc 0xBE752BEA
+dc 0xBE3DCE3E
+dc 0xBE01E3BA
+dc 0xBE28CD46
+dc 0x3F4CDAAA
+dc 0xBDFF04A4
+dc 0x3F39BDB8
+dc 0x3F3EDE35
+dc 0x3F0CCE3E
+dc 0x3F5F6BD0
+dc 0xBDCFAEDC
+dc 0xBE3D5B99
+dc 0xBE1E08C8
+dc 0xBE3CE3AF
+dc 0x3F2B6CD0
+dc 0xBE4CDCA3
+dc 0x3F2D4DAA
+dc 0xBE4EAAF0
+dc 0xBE1EFAEF
+dc 0x3F3EEEB8
+dc 0x3F4FC9B4
+dc 0xBDFAA6BD
+dc 0xBE1C2BC4
+* --- Neuron 20 Weights ---
+dc 0x3EE8CDA5
+dc 0x3F8A4BDE
+dc 0x3EA6BC34
+dc 0x3F4CCDF6
+dc 0xBD44BD35
+dc 0xBD0EE9BD
+dc 0x3DDAA224
+dc 0x3F3D87D8
+dc 0x3EA9F99A
+dc 0x3DEC5B99
+dc 0x3E8CE45F
+dc 0x3FBD12E9
+dc 0x3F10CCEE
+dc 0xBE370C98
+dc 0x3E71AA57
+dc 0xBE90CD4A
+dc 0xBE80C7EE
+dc 0xBEC4CD7E
+dc 0xBE326CE2
+dc 0x3E523A39
+dc 0x3EDCE496
+dc 0x3EE8CD4E
+dc 0x3EAAFAA5
+dc 0xBD5BBCE8
+dc 0x3EACC9A5
+dc 0xBEA3B66D
+dc 0x3EA5BBDE
+dc 0x3EDFAEF5
+dc 0xBEA67CD0
+dc 0xBDDCDFA5
+dc 0x3F027C34
+dc 0x3EE0BF95
+* --- Neuron 21 Weights ---
+dc 0xBE0CE30A
+dc 0xBE3DCDFE
+dc 0x3DFBCE35
+dc 0xBE1FA3D8
+dc 0x3F5A2BC9
+dc 0x3F55BDE6
+dc 0xBE1D5BD2
+dc 0xBDFAE396
+dc 0xBE13EE02
+dc 0xBE756BC1
+dc 0xBE3C7CB2
+dc 0xBDFAF57E
+dc 0xBE285BD0
+dc 0x3F4CDB92
+dc 0xBDFA0DA5
+dc 0x3F37CE35
+dc 0x3F3D6F9D
+dc 0x3F0FA4DD
+dc 0x3F5DE3A5
+dc 0xBDC6A6BE
+dc 0xBE3EEA85
+dc 0xBE1E5BD4
+dc 0xBE3A6BD1
+dc 0x3F2B66DC
+dc 0xBE4E0AA5
+dc 0x3F2BA4DD
+dc 0xBE4CDB9E
+dc 0xBE1E0C63
+dc 0x3F3F4D23
+dc 0x3F4E0CE2
+dc 0xBDFA26C7
+dc 0xBE1A3C21
+* --- Neuron 22 Weights ---
+dc 0xBE0EE7CE
+dc 0xBE3F87AF
+dc 0x3E13EC4F
+dc 0xBE1FAEEA
+dc 0x3F59ACFA
+dc 0x3F56E7E4
+dc 0xBE1DE456
+dc 0xBE05BBCC
+dc 0xBE15FBB8
+dc 0xBE74FAEF
+dc 0xBE3DF054
+dc 0xBE01CE24
+dc 0xBE28CD35
+dc 0x3F4D2BC8
+dc 0xBDFFE3E0
+dc 0x3F3A0CD4
+dc 0x3F3EEB93
+dc 0x3F0CE354
+dc 0x3F5FAA5D
+dc 0xBDCE3958
+dc 0xBE3CDDFA
+dc 0xBE1E04B2
+dc 0xBE3C4E3D
+dc 0x3F2B5BDE
+dc 0xBE4CD4F4
+dc 0x3F2D6F59
+dc 0xBE4EE6CB
+dc 0xBE1F0860
+dc 0x3F3EF4DA
+dc 0x3F4FE47B
+dc 0xBDFAA7E3
+dc 0xBE1C6CE6
+* --- Neuron 23 Weights ---
+dc 0xBE0A7CDA
+dc 0xBE3FCEAA
+dc 0x3E1C5AE2
+dc 0xBE1FC3CE
+dc 0x3F59A4DE
+dc 0x3F56C9AD
+dc 0xBE1D5BDE
+dc 0xBE086BD9
+dc 0xBE156BE3
+dc 0xBE756BC4
+dc 0xBE3DCD75
+dc 0xBE01EE9B
+dc 0xBE285BCE
+dc 0x3F4CCE35
+dc 0xBDFFDFAC
+dc 0x3F3A0CE2
+dc 0x3F3EDFA8
+dc 0x3F0CCE23
+dc 0x3F5FAA56
+dc 0xBDCE6CDC
+dc 0xBE3CD7EF
+dc 0xBE1E3A4B
+dc 0xBE3CE5AC
+dc 0x3F2B6CD2
+dc 0xBE4CDCA3
+dc 0x3F2D5BD0
+dc 0xBE4EEA95
+dc 0xBE1EEA9C
+dc 0x3F3EFAED
+dc 0x3F4FC9B6
+dc 0xBDFAA7AF
+dc 0xBE1C2BC4
+* --- Neuron 24 Weights ---
+dc 0xBE0A7CDA
+dc 0xBE3FCEAA
+dc 0x3E1C5AE2
+dc 0xBE1FC3CE
+dc 0x3F59A4DE
+dc 0x3F56C9AD
+dc 0xBE1D5BDE
+dc 0xBE086BD9
+dc 0xBE156BE3
+dc 0xBE756BC4
+dc 0xBE3DCD75
+dc 0xBE01EE9B
+dc 0xBE285BCE
+dc 0x3F4CCE35
+dc 0xBDFFDFAC
+dc 0x3F3A0CE2
+dc 0x3F3EDFA8
+dc 0x3F0CCE23
+dc 0x3F5FAA56
+dc 0xBDCE6CDC
+dc 0xBE3CD7EF
+dc 0xBE1E3A4B
+dc 0xBE3CE5AC
+dc 0x3F2B6CD2
+dc 0xBE4CDCA3
+dc 0x3F2D5BD0
+dc 0xBE4EEA95
+dc 0xBE1EEA9C
+dc 0x3F3EFAED
+dc 0x3F4FC9B6
+dc 0xBDFAA7AF
+dc 0xBE1C2BC4
+* --- Neuron 25 Weights ---
+dc 0xBE0EE7CE
+dc 0xBE3F87AF
+dc 0x3E13EC4F
+dc 0xBE1FAEEA
+dc 0x3F59ACFA
+dc 0x3F56E7E4
+dc 0xBE1DE456
+dc 0xBE05BBCC
+dc 0xBE15FBB8
+dc 0xBE74FAEF
+dc 0xBE3DF054
+dc 0xBE01CE24
+dc 0xBE28CD35
+dc 0x3F4D2BC8
+dc 0xBDFFE3E0
+dc 0x3F3A0CD4
+dc 0x3F3EEB93
+dc 0x3F0CE354
+dc 0x3F5FAA5D
+dc 0xBDCE3958
+dc 0xBE3CDDFA
+dc 0xBE1E04B2
+dc 0xBE3C4E3D
+dc 0x3F2B5BDE
+dc 0xBE4CD4F4
+dc 0x3F2D6F59
+dc 0xBE4EE6CB
+dc 0xBE1F0860
+dc 0x3F3EF4DA
+dc 0x3F4FE47B
+dc 0xBDFAA7E3
+dc 0xBE1C6CE6
+* --- Neuron 26 Weights ---
+dc 0xBE08A9E4
+dc 0xBE3E4DC5
+dc 0x3E1AD3FA
+dc 0xBE1F04AC
+dc 0x3F5A0CD2
+dc 0x3F54F96E
+dc 0xBE1DA3C7
+dc 0xBE0C53C7
+dc 0xBE181ED3
+dc 0xBE74D83B
+dc 0xBE3DF07D
+dc 0xBE0221E5
+dc 0xBE28BD27
+dc 0x3F4E0867
+dc 0xBDFFE3DA
+dc 0x3F387DAF
+dc 0x3F3F5AD4
+dc 0x3F0CBCE4
+dc 0x3F5FAA7C
+dc 0xBDCA1AD2
+dc 0xBE3CEF6B
+dc 0xBE1E0C4F
+dc 0xBE3B89BE
+dc 0x3F2B6CAD
+dc 0xBE4CD8EA
+dc 0x3F2E08BD
+dc 0xBE4E08C6
+dc 0xBE1F17E3
+dc 0x3F3EE4FA
+dc 0x3F50DF7D
+dc 0xBDFA0695
+dc 0xBE1C2A54
+* --- Neuron 27 Weights ---
+dc 0xBE08CE41
+dc 0xBE3C6FA5
+dc 0x3DFDE44E
+dc 0xBE1DC40A
+dc 0x3F5B0CDC
+dc 0x3F57B6C5
+dc 0xBE1AF1D9
+dc 0xBDFF057B
+dc 0xBE1424E6
+dc 0xBE747CDF
+dc 0xBE37078C
+dc 0xBDFF586E
+dc 0xBE27CB36
+dc 0x3F4AD266
+dc 0xBDFA0B33
+dc 0x3F34F5DC
+dc 0x3F3A0CD4
+dc 0x3F0BB6C9
+dc 0x3F5DAFC4
+dc 0xBDC462D6
+dc 0xBE3C3F85
+dc 0xBE1DF07C
+dc 0xBE3981DA
+dc 0x3F2AA863
+dc 0xBE4EFE6B
+dc 0x3F2BA1CD
+dc 0xBE4B64EC
+dc 0xBE1E0D1B
+dc 0x3F3F72B3
+dc 0x3F4D2B9F
+dc 0xBDFA2E3E
+dc 0xBE1A5F58
+* --- Neuron 28 Weights ---
+dc 0x3EC23EE3
+dc 0x3F16C502
+dc 0x3EA6653E
+dc 0x3D4AC9BE
+dc 0x3D69655D
+dc 0x3D2A3C4D
+dc 0x3D8A1E2B
+dc 0x3E2DEBAC
+dc 0x3DF95BFE
+dc 0x3DB2D3AA
+dc 0x3E3A56AF
+dc 0x3D69D2BD
+dc 0x3D97CE5F
+dc 0x3D99D8CE
+dc 0x3E14DBCD
+dc 0x3E8A56FA
+dc 0x3D4C0A62
+dc 0x3E140409
+dc 0x3E4BE15F
+dc 0x3CC739D6
+dc 0x3E1E3ECE
+dc 0x3CC225B5
+dc 0xBDACCE34
+dc 0xBF19525C
+dc 0xBE6CDE3B
+dc 0xBE30CD1E
+dc 0x3B85A3ED
+dc 0xBC33941F
+dc 0xBB7C4A5A
+dc 0xBEBB9AD9
+dc 0xBE3AFA4B
+dc 0xBE82A36B
+* --- Neuron 29 Weights ---
+dc 0xBE08CE41
+dc 0xBE3C6FA5
+dc 0x3DFDE44E
+dc 0xBE1DC40A
+dc 0x3F5B0CDC
+dc 0x3F57B6C5
+dc 0xBE1AF1D9
+dc 0xBDFF057B
+dc 0xBE1424E6
+dc 0xBE747CDF
+dc 0xBE37078C
+dc 0xBDFF586E
+dc 0xBE27CB36
+dc 0x3F4AD266
+dc 0xBDFA0B33
+dc 0x3F34F5DC
+dc 0x3F3A0CD4
+dc 0x3F0BB6C9
+dc 0x3F5DAFC4
+dc 0xBDC462D6
+dc 0xBE3C3F85
+dc 0xBE1DF07C
+dc 0xBE3981DA
+dc 0x3F2AA863
+dc 0xBE4EFE6B
+dc 0x3F2BA1CD
+dc 0xBE4B64EC
+dc 0xBE1E0D1B
+dc 0x3F3F72B3
+dc 0x3F4D2B9F
+dc 0xBDFA2E3E
+dc 0xBE1A5F58
+* --- Neuron 30 Weights ---
+dc 0xBE0EE7CE
+dc 0xBE3F87AF
+dc 0x3E13EC4F
+dc 0xBE1FAEEA
+dc 0x3F59ACFA
+dc 0x3F56E7E4
+dc 0xBE1DE456
+dc 0xBE05BBCC
+dc 0xBE15FBB8
+dc 0xBE74FAEF
+dc 0xBE3DF054
+dc 0xBE01CE24
+dc 0xBE28CD35
+dc 0x3F4D2BC8
+dc 0xBDFFE3E0
+dc 0x3F3A0CD4
+dc 0x3F3EEB93
+dc 0x3F0CE354
+dc 0x3F5FAA5D
+dc 0xBDCE3958
+dc 0xBE3CDDFA
+dc 0xBE1E04B2
+dc 0xBE3C4E3D
+dc 0x3F2B5BDE
+dc 0xBE4CD4F4
+dc 0x3F2D6F59
+dc 0xBE4EE6CB
+dc 0xBE1F0860
+dc 0x3F3EF4DA
+dc 0x3F4FE47B
+dc 0xBDFAA7E3
+dc 0xBE1C6CE6
+* --- Neuron 31 Weights ---
+dc 0xBE08A9E4
+dc 0xBE3E4DC5
+dc 0x3E1AD3FA
+dc 0xBE1F04AC
+dc 0x3F5A0CD2
+dc 0x3F54F96E
+dc 0xBE1DA3C7
+dc 0xBE0C53C7
+dc 0xBE181ED3
+dc 0xBE74D83B
+dc 0xBE3DF07D
+dc 0xBE0221E5
+dc 0xBE28BD27
+dc 0x3F4E0867
+dc 0xBDFFE3DA
+dc 0x3F387DAF
+dc 0x3F3F5AD4
+dc 0x3F0CBCE4
+dc 0x3F5FAA7C
+dc 0xBDCA1AD2
+dc 0xBE3CEF6B
+dc 0xBE1E0C4F
+dc 0xBE3B89BE
+dc 0x3F2B6CAD
+dc 0xBE4CD8EA
+dc 0x3F2E08BD
+dc 0xBE4E08C6
+dc 0xBE1F17E3
+dc 0x3F3EE4FA
+dc 0x3F50DF7D
+dc 0xBDFA0695
+dc 0xBE1C2A54
+* --- Neuron 32 Weights ---
+dc 0xBE0EE7CE
+dc 0xBE3F87AF
+dc 0x3E13EC4F
+dc 0xBE1FAEEA
+dc 0x3F59ACFA
+dc 0x3F56E7E4
+dc 0xBE1DE456
+dc 0xBE05BBCC
+dc 0xBE15FBB8
+dc 0xBE74FAEF
+dc 0xBE3DF054
+dc 0xBE01CE24
+dc 0xBE28CD35
+dc 0x3F4D2BC8
+dc 0xBDFFE3E0
+dc 0x3F3A0CD4
+dc 0x3F3EEB93
+dc 0x3F0CE354
+dc 0x3F5FAA5D
+dc 0xBDCE3958
+dc 0xBE3CDDFA
+dc 0xBE1E04B2
+dc 0xBE3C4E3D
+dc 0x3F2B5BDE
+dc 0xBE4CD4F4
+dc 0x3F2D6F59
+dc 0xBE4EE6CB
+dc 0xBE1F0860
+dc 0x3F3EF4DA
+dc 0x3F4FE47B
+dc 0xBDFAA7E3
+dc 0xBE1C6CE6
+* =======================================================
+pc = 0x850                 * --- משקולות השכבה השנייה (חבויה -> פלט): 32 משקולות ---
+dc 0x3FF66A12
+dc 0x4032C79E
+dc 0x3FF5FAAA
+dc 0x4033C994
+dc 0x3FEBB3E3
+dc 0x3FE6C995
+dc 0x4030729C
+dc 0x3FEBAF60
+dc 0x3FED8EAD
+dc 0x3FDB1511
+dc 0x40330D7F
+dc 0x4029CE4B
+dc 0x4031ADAA
+dc 0x3FEB5BD6
+dc 0x3FEDBC7B
+dc 0x3FDE5A3D
+dc 0x3FDCEE17
+dc 0x4031EAC7
+dc 0x402A1AE2
+dc 0x403EFBAA
+dc 0x3FDBEFAB
+dc 0x3FCD6E3B
+dc 0x4030E3BF
+dc 0x40498A12
+dc 0x4031C4E1
+dc 0xC0416965
+dc 0x4040EA70
+dc 0x4038F326
+dc 0xC031829C
+dc 0xC027C99F
+dc 0x402BA864
+dc 0xC016C26B
+* =========================================================
+pc = 0x800                  * --- כתובת 2048: תוצאות שכבה נסתרת (זמני) ---
+ds 32
+pc = 0x900                  * --- כתובת 2384: ביט היציאה (החלטת הרשת) ---
+out_val: ds 1
+* ========================================================

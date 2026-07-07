@@ -1,0 +1,11 @@
+[Inputs]
+CLK
+RESET
+pc_en
+=PC_IN[31:0]=
+[Outputs]
+=PC_OUT[31:0]=
+[BiDir]
+[ATTRIBUTES]
+VeriModel PC_ENVm
+
