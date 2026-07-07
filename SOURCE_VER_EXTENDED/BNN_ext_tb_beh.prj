@@ -1,0 +1,4 @@
+verilog work "FP_Adder.v"
+verilog work "BNN_extention.v"
+verilog work "BNN_ext_tb.v"
+verilog work "C:/Xilinx/14.7/ISE_DS/ISE//verilog/src/glbl.v"

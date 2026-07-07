@@ -1,0 +1,14 @@
+[Inputs]
+clk
+reset
+ACC_UPDATE
+=data_A[31:0]=
+=data_B[31:0]=
+=orig_datapath_in[31:0]=
+=BNN_SEL[1:0]=
+[Outputs]
+=to_reg_C[31:0]=
+[BiDir]
+[ATTRIBUTES]
+VeriModel BNN_extention
+
