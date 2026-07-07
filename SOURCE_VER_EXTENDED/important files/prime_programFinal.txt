@@ -1,0 +1,75 @@
+* --- Initialization & Setup ---
+pc = 0x0
+    addi R10 R0 0x14     * Jump to main process
+    jr   R10
+
+pc = 0x4
+input_n:  dc 150         * Input value N
+output_p: dc 0xE         * Result pointer start address
+
+* main program
+* part 1 - initializing the array
+pc = 0x14
+main: lw   R1  R0 4        * R1 = N (The limit)
+    addi R2  R0 0x200    * R2 = Base address for the sieve array
+    
+    addi R3  R0 2        * i = 2
+fill_lp: add  R4  R2 R3       * Calculate address: base + i
+    addi R5  R0 1
+    sw   R5  R4 0        * A[i] = 1 (we are now assuming the all numbers are prime)
+    addi R3  R3 1        * i++
+    sub  R7  R3 R1
+    slti R7  R7 1        * check if i <= N
+    bnez R7  fill_lp
+
+* Part 2: Sieve algorithm
+    addi R20 R0 2        * R20 is 'p'
+outer_sv: addi R28 R0 0        * R28 will hold p^2
+    add  R8  R20 R0      * Counter for mult
+mult_p2: beqz R8  chk_lim
+    add  R28 R28 R20
+    addi R8  R8 -1
+    beqz R0  mult_p2
+
+chk_lim: sub  R7  R28 R1
+    slti R7  R7 1        * If p^2 <= N, continue marking
+    beqz R7  find_res 
+
+    * Check if p is still marked as prime
+    add  R4  R2 R20      
+    lw   R5  R4 0
+    beqz R5  next_p      * If A[p] == 0, skip its multiples
+
+    *  Loop that mark multiples starting from p^2
+    add  R21 R28 R0      * j = p^2
+in_mark: add  R4  R2 R21      
+    sw   R0  R4 0        * A[j] = 0 (Composite)
+    add  R21 R21 R20     * j = j + p
+    sub  R7  R21 R1
+    slti R7  R7 1        * While j <= N
+    bnez R7  in_mark
+
+next_p: addi R20 R20 1       * p++
+    beqz R0  outer_sv
+
+* Part 3: Collecting 10 Largest Primes
+find_res: addi R15 R0 10       * Counter: need 10 primes
+    add  R20 R1 R0       * Start searching from N downwards
+    addi R16 R0 0xE      * Destination address for results
+
+clct_lp: addi R20 R20 -1      * Decrement p
+    slti R7  R20 2       * If p < 2, we are done
+    bnez R7  done
+    
+    add  R4  R2 R20      * Check A[p]
+    lw   R5  R4 0
+    beqz R5  clct_lp  * Not prime, keep looking
+    
+    * if we are herem, we found a prime
+    sw   R20 R16 0       * Store prime in result memory
+    addi R16 R16 -1      * Decrement result pointer
+    addi R15 R15 -1      * Decrease "found" counter
+    beqz R15 done        * Exit if 10 primes found
+    beqz R0  clct_lp
+
+done: halt
