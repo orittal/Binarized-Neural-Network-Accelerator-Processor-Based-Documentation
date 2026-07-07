@@ -1,7 +1,0 @@
-MODULE write_machine
-	SUBMODULE CNT32
-		INSTANCE XLXI_1
-	SUBMODULE const_reg
-		INSTANCE XLXI_2
-	SUBMODULE write_stateMachine
-		INSTANCE XLXI_3

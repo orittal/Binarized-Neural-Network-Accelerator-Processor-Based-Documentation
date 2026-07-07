@@ -1,0 +1,4 @@
+vhdtdtfi -lib work C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/BNN_extention.v -lang verilog -prj SOURCE_VER -o BNN_extention.spl -module BNN_extention -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
+spl2sym -intstyle ise -family spartan6 -w BNN_extention.spl C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/BNN_extention.sym 
+vhdtdtfi -lib work C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/BNN_extention.v -lang verilog -prj SOURCE_VER -o BNN_extention.spl -module BNN_extention -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
+spl2sym -intstyle ise -family spartan6 -w BNN_extention.spl C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/BNN_extention.sym 

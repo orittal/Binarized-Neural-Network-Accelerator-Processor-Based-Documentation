@@ -1,0 +1,4 @@
+vhdtdtfi -lib work E:/adlx/C8/SOURCE_VER/reg5.v -lang verilog -prj SOURCE_VER -o reg5.spl -module reg5 -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
+spl2sym -intstyle ise -family spartan6 reg5.spl E:/adlx/C8/SOURCE_VER/reg5.sym 
+vhdtdtfi -lib work E:/adlx/C8/SOURCE_VER/reg5.v -lang verilog -prj SOURCE_VER -o reg5.spl -module reg5 -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
+spl2sym -intstyle ise -family spartan6 reg5.spl E:/adlx/C8/SOURCE_VER/reg5.sym 

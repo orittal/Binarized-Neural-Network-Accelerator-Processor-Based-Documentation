@@ -1,2 +1,0 @@
-vhdtdtfi -lib work E:/adlx/C8/SOURCE_VER/id_num.v -lang verilog -prj SOURCE_VER -o id_num.spl -module id_num -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
-spl2sym -intstyle ise -family spartan6 id_num.spl E:/adlx/C8/SOURCE_VER/id_num.sym 

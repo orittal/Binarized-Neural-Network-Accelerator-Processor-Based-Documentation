@@ -1,0 +1,141 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import numpy as np
+from torch.utils.data import DataLoader, TensorDataset
+import pandas as pd
+
+np.random.seed(42)
+torch.manual_seed(42)
+
+#ground truth
+true_weights = np.random.dirichlet(np.ones(32), size=1).flatten().astype(np.float32)
+financial_threshold = 0.0
+
+print("Ground Truth")
+for i, w in enumerate(true_weights):
+    print(f"אפיק השקעה {i+1:02d}: משקל {w:.4f}")
+print(f"סף רווח נבחר: {financial_threshold} (חברה מרוויחה או מפסידה)\n" + "-"*50 + "\n")
+
+#creating training set
+num_samples = 25000
+
+raw_inputs = np.random.uniform(-100, 100, size=(num_samples, 32)).astype(np.float32)
+final_balances = np.dot(raw_inputs, true_weights)
+
+labels = (final_balances >= financial_threshold).astype(np.float32).reshape(-1, 1)
+
+normalized_inputs = raw_inputs / 100.0
+
+split_idx = int(num_samples * 0.8)
+X_train, X_test = normalized_inputs[:split_idx], normalized_inputs[split_idx:]
+y_train, y_test = labels[:split_idx], labels[split_idx:]
+
+train_dataset = TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
+test_dataset = TensorDataset(torch.tensor(X_test), torch.tensor(y_test))
+train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+
+#network architecture
+class FinancialNetReLU(nn.Module):
+    def __init__(self):
+        super(FinancialNetReLU, self).__init__()
+        # hidden layer - 32 inputs, 32 activations, no bias' ReLU
+        self.hidden = nn.Linear(32, 32, bias=False)
+        self.relu = nn.ReLU()
+
+        # output layer - 32 inputs, 1 activation, no bias
+        self.output = nn.Linear(32, 1, bias=False)
+        self.sigmoid = nn.Sigmoid() #for loss calculation
+
+    def forward(self, x):
+        x = self.hidden(x)
+        x = self.relu(x)
+        x = self.output(x)
+        x = self.sigmoid(x)
+        return x
+
+model = FinancialNetReLU().to(torch.float32)
+criterion = nn.BCELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.0005)
+
+#training loop
+epochs = 150
+print("start training")
+for epoch in range(epochs):
+    model.train()
+    epoch_loss = 0
+    for batch_X, batch_y in train_loader:
+        optimizer.zero_grad()
+        predictions = model(batch_X)
+        loss = criterion(predictions, batch_y)
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item()
+
+    if (epoch + 1) % 15 == 0 or epoch == 0:
+        print(f"Epoch {epoch+1:03d}/{epochs} | Loss: {epoch_loss/len(train_loader):.4f}")
+
+hidden_weights = model.hidden.weight.data.numpy()
+output_weights = model.output.weight.data.numpy()
+
+#original evaluation
+model.eval()
+with torch.no_grad():
+    X_test_tensor = torch.tensor(X_test)
+    y_test_tensor = torch.tensor(y_test)
+    test_preds = model(X_test_tensor)
+
+    predicted_classes = (test_preds >= 0.5).float()
+    accuracy = (predicted_classes == y_test_tensor).float().mean()
+    print(f"\n" + "="*50 + f"\n PyTorch Standard Accuracy: {accuracy.item()*100:.2f}%\n" + "="*50)
+
+# evaluation according to hardware
+with torch.no_grad():
+    h_out = torch.matmul(X_test_tensor, torch.tensor(hidden_weights).T)
+    h_act = torch.relu(h_out)
+    raw_outputs = torch.matmul(h_act, torch.tensor(output_weights).T)
+
+    predicted_classes_hw = (raw_outputs >= 0.0).float()
+
+    accuracy_hw = (predicted_classes_hw == y_test_tensor).float().mean()
+    print(f"\n" + "="*50 + f"\n Hardware-Equivalent Accuracy: {accuracy_hw.item()*100:.2f}%\n" + "="*50)
+
+#prints
+print("\nweights are saved")
+print(f"\n hidden weights matrix {hidden_weights.shape}):")
+print(hidden_weights)
+
+print(f"\n" + "-"*40)
+print(f"output weights {output_weights.shape}):")
+print(output_weights.flatten())
+
+#save to excel
+print("\n" + "="*50 + "\n saving to excel")
+
+df_hidden = pd.DataFrame(hidden_weights)
+df_output = pd.DataFrame(output_weights)
+
+excel_filename = 'network_weights.xlsx'
+with pd.ExcelWriter(excel_filename, engine='openpyxl') as writer:
+    df_hidden.to_excel(writer, sheet_name='Hidden_Layer_32x32', index=False, header=False)
+    df_output.to_excel(writer, sheet_name='Output_Layer_1x32', index=False, header=False)
+
+print(f"successfully saved {excel_filename}")
+
+def float32_to_hex(val):
+    return f"{np.float32(val).view(np.uint32):08x}"
+
+v_float32_to_hex = np.vectorize(float32_to_hex)
+
+hidden_hex = v_float32_to_hex(hidden_weights)
+output_hex = v_float32_to_hex(output_weights)
+
+df_hidden_hex = pd.DataFrame(hidden_hex)
+df_output_hex = pd.DataFrame(output_hex)
+
+hex_excel_filename = 'network_weights_hex.xlsx'
+with pd.ExcelWriter(hex_excel_filename, engine='openpyxl') as writer:
+    df_hidden_hex.to_excel(writer, sheet_name='Hidden_Hex_32x32', index=False, header=False)
+    df_output_hex.to_excel(writer, sheet_name='Output_Hex_1x32', index=False, header=False)
+
+print(f"hex weights saved to excel {hex_excel_filename}")

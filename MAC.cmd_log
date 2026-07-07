@@ -1,4 +1,0 @@
-vhdtdtfi -lib work E:/adlx/C8/SOURCE_VER/MAC.v -lang verilog -prj SOURCE_VER -o MAC.spl -module MAC -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
-spl2sym -intstyle ise -family spartan6 -w MAC.spl E:/adlx/C8/SOURCE_VER/MAC.sym 
-vhdtdtfi -lib work E:/adlx/C8/SOURCE_VER/MAC.v -lang verilog -prj SOURCE_VER -o MAC.spl -module MAC -template C:/Xilinx/14.7/ISE_DS/ISE//data/splveri.tft -deleteonerror 
-spl2sym -intstyle ise -family spartan6 -w MAC.spl E:/adlx/C8/SOURCE_VER/MAC.sym 

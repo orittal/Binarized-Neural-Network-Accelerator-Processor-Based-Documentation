@@ -1,0 +1,14 @@
+0x00000000: 0x2C01000A	start:      	 	addi R1 R0 10 
+0x00000001: 0x6822000A	            	 	seqi R2 R1 10 
+0x00000002: 0x68230005	            	 	seqi R3 R1 5 
+0x00000003: 0x70240014	            	 	slti R4 R1 20 
+0x00000004: 0x70250005	            	 	slti R5 R1 5 
+0x00000005: 0x64260005	            	 	sgti R6 R1 5 
+0x00000006: 0x7427000A	            	 	snei R7 R1 10 
+0x00000007: 0xFFFF00FB	            	 	halt 
+0x00000008: 0x2C01000F	            	 	addi R1 R0 15
+					            	 
+
+Label Report:
+start: 2 D: 
+*XML file date: Wed 20/6/2012 6:49:12

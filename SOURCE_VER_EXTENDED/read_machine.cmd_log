@@ -1,0 +1,8 @@
+sch2sym -intstyle ise -family spartan6 -refsym read_machine E:/adlx/C8/SOURCE_VER/read_machine.sch E:/adlx/C8/SOURCE_VER/read_machine.sym 
+sch2hdl -intstyle ise -family spartan6 -flat -suppress -vhdl read_machine_drc.vhf -w E:/adlx/C8/SOURCE_VER/read_machine.sch 
+sch2sym -intstyle ise -family spartan6 -refsym read_machine E:/adlx/C8/SOURCE_VER/read_machine.sch E:/adlx/C8/SOURCE_VER/read_machine.sym 
+sch2sym -intstyle ise -family spartan6 -refsym read_machine E:/adlx/C8/SOURCE_VER/read_machine.sch E:/adlx/C8/SOURCE_VER/read_machine.sym 
+sch2hdl -intstyle ise -family spartan6 -flat -suppress -vhdl read_machine_drc.vhf -w E:/adlx/C8/SOURCE_VER/read_machine.sch 
+sch2sym -intstyle ise -family spartan6 -w -refsym read_machine E:/adlx/C8/SOURCE_VER/read_machine.sch E:/adlx/C8/SOURCE_VER/read_machine.sym 
+sch2hdl -intstyle ise -family spartan6 -flat -suppress -vhdl read_machine_drc.vhf -w E:/adlx/C8/SOURCE_VER/read_machine.sch 
+sch2hdl -intstyle ise -family spartan6 -flat -suppress -vhdl read_machine_drc.vhf -w E:/adlx/C8/SOURCE_VER/read_machine.sch 

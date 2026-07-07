@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -lib "unisims_ver" -lib "unimacro_ver" -lib "xilinxcorelib_ver" -lib "secureip" -o "C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/BNN_ext_tb_isim_beh.exe" -prj "C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/BNN_ext_tb_beh.prj" "work.BNN_ext_tb" "work.glbl" 

@@ -1,0 +1,10 @@
+[Inputs]
+sub
+=A[31:0]=
+=B[31:0]=
+[Outputs]
+=Sum[31:0]=
+[BiDir]
+[ATTRIBUTES]
+VeriModel FP_Adder
+

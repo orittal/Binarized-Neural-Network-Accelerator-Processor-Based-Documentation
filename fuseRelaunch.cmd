@@ -1,1 +1,0 @@
--intstyle "ise" -incremental -lib "unisims_ver" -lib "unimacro_ver" -lib "xilinxcorelib_ver" -lib "secureip" -o "E:/adlx/C8/SOURCE_VER/read_machine_read_machine_sch_tb_isim_beh.exe" -prj "E:/adlx/C8/SOURCE_VER/read_machine_read_machine_sch_tb_beh.prj" "work.read_machine_read_machine_sch_tb" "work.glbl" 

@@ -1,9 +1,0 @@
-pc = 0x0
-addi R1 R0 0x10 
-seqi R2 R1 0x10 
-seqi R3 R1 0x5 
-slti R4 R1 0x20 
-slti R5 R1 0x5 
-sgti R6 R1 0x5 
-snei R7 R1 0x10 
-halt 

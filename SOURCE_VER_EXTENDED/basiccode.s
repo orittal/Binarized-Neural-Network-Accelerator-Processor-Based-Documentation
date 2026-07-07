@@ -1,0 +1,13 @@
+pc = 0x0
+start: 	addi R1 R0 10
+	addi R2 R0 0
+	sw R1 R0 100
+	add R12 R1 R1
+	lw R3 R0 100
+	beqz R1 2
+	addi R4 R3 5
+	beqz R2 1
+	addi R4 R0 99
+	slli R11 R4
+	addi R5 R4 -20
+	halt

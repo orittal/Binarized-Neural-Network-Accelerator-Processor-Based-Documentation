@@ -1,0 +1,2 @@
+sch2sym -intstyle ise -family spartan6 -w -refsym FULL_Extended_IOSIMUL C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/FULL_Extended_IOSIMUL.sch C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/FULL_Extended_IOSIMUL.sym 
+sch2hdl -intstyle ise -family spartan6 -flat -suppress -vhdl FULL_Extended_IOSIMUL_drc.vhf -w C:/Users/administrator.CLS-210-PC/Desktop/C8/SOURCE_VER_EXTENDED/FULL_Extended_IOSIMUL.sch 
